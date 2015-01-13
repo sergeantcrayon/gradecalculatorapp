@@ -31,6 +31,7 @@ public class CoursesActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_courses);
 
+        setTitle("Classes");
         openDB();
 
         final LinearLayout mainLayout = (LinearLayout) findViewById(R.id.add_course);

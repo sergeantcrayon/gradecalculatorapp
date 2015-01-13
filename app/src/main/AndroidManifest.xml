@@ -14,7 +14,9 @@
         </activity>
         <activity
             android:name=".CoursesActivity"
-            android:label="@string/title_activity_courses" >
+            android:label="Grade Calculator" >
+
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

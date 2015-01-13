@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:text="@string/add_course"
             android:background="@drawable/add_class"
-            android:textColor="#5793CF"
+            android:textColor="#27435E"
             android:gravity="left|center"
             android:paddingLeft="11dp"
 
