@@ -181,7 +181,8 @@ public class MainActivity extends ActionBarActivity {
                 nameButton.setLayoutParams(nameButtonParam);
                 nameButton.setText(name);
 
-                nameButton.setOnClickListener(new View.OnClickListener() { //onClick for nameButton
+                //onClickListener for nameButton
+                nameButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         myDb.deleteRow(id);
@@ -215,6 +216,14 @@ public class MainActivity extends ActionBarActivity {
                 scoreButton.setBackgroundResource(R.drawable.button_bg);
                 scoreButtonParam.weight = 3;
                 scoreButton.setLayoutParams(scoreButtonParam);
+
+                // onClickListener for Score and Max Button
+                scoreButton.setOnClickListener(new View.OnClickListener(){
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
 
                 if(score == -1){ // if there is no score and max
                     scoreButton.setTextColor(Color.parseColor("#cccccc"));
