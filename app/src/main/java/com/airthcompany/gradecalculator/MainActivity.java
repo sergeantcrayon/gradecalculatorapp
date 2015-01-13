@@ -2,6 +2,7 @@ package com.airthcompany.gradecalculator;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.media.Image;
@@ -30,7 +31,7 @@ import java.util.TreeMap;
 
 public class MainActivity extends ActionBarActivity {
 
-
+    String databaseTable;
     DataBaseAdapter myDb;
     final int NO_INPUT = -1;
 
@@ -49,14 +50,17 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        openDB(); // opening dataBase
+        Intent i = getIntent();
+        databaseTable = i.getStringExtra("table");
 
+        openDB();
         final LinearLayout mainLayout = (LinearLayout) findViewById(R.id.main_layout); // retrieving main layout
         Button addButton = (Button) findViewById(R.id.button_add); // retrieving add button
 
-        Cursor cursorAll = myDb.getAllRows(); // Displaying all items
+        Cursor cursorAll = myDb.getAllRows(databaseTable); // Displaying all items
         DisplayAllStuff(mainLayout, cursorAll);
 
+        setTitle(databaseTable);
         addButton.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(final View v) { // add button on click listener
@@ -104,12 +108,12 @@ public class MainActivity extends ActionBarActivity {
                         Long newId;
                         //Inserting to Database
                         if(scoreValue.toString().length() == 0 || maxValue.toString().length() == 0){ // if there's no grade placed
-                             newId = myDb.insertItem(nameValue.toString().trim(), NO_INPUT, NO_INPUT, Integer.parseInt(weightValue.toString()));
+                             newId = myDb.insertItem(nameValue.toString().trim(), NO_INPUT, NO_INPUT, Integer.parseInt(weightValue.toString()), databaseTable);
                         } else {
-                             newId = myDb.insertItem(nameValue.toString().trim(), Integer.parseInt(scoreValue.toString()), Integer.parseInt(maxValue.toString()), Integer.parseInt(weightValue.toString()));
+                             newId = myDb.insertItem(nameValue.toString().trim(), Integer.parseInt(scoreValue.toString()), Integer.parseInt(maxValue.toString()), Integer.parseInt(weightValue.toString()), databaseTable);
                         }
 
-                        Cursor cursor = myDb.getRow(newId);
+                        Cursor cursor = myDb.getRow(newId, databaseTable);
 
                         //Retrieving same item from Database
                         if(cursor.moveToFirst()){
@@ -198,7 +202,7 @@ public class MainActivity extends ActionBarActivity {
                             public void onClick(DialogInterface dialog, int which) {
                                 Editable updatedName = nameInput.getText();
 
-                                myDb.updateRow(id, updatedName.toString().trim(), score, max, weight);
+                                myDb.updateRow(id, updatedName.toString().trim(), score, max, weight, databaseTable);
                                 nameButton.setText(updatedName);
                             }
                         });
@@ -208,7 +212,7 @@ public class MainActivity extends ActionBarActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
 
-                                myDb.deleteRow(id);
+                                myDb.deleteRow(id, databaseTable);
                                 layout.removeView(row);
 
 
@@ -290,7 +294,7 @@ public class MainActivity extends ActionBarActivity {
                                 Editable updatedMax = maxInput.getText();
 
                                 // updating database
-                                myDb.updateRow(id, name.toString().trim() , Integer.parseInt(updatedScore.toString()), Integer.parseInt(updatedMax.toString()), weight);
+                                myDb.updateRow(id, name.toString().trim() , Integer.parseInt(updatedScore.toString()), Integer.parseInt(updatedMax.toString()), weight, databaseTable);
 
                                 // updating text on scoreButton
                                 scoreButton.setText( updatedScore.toString()+"/"+updatedMax.toString());
@@ -379,7 +383,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void computeAverage(){
-        Cursor cursor = myDb.getAllRows();
+        Cursor cursor = myDb.getAllRows(databaseTable);
 
         targetTotalWeight = targetTotalWeight - currentTotalWeight; // what's left should be the sum of weights from hypo buttons
         currentTotalWeight = currentSumAndProduct = 0;

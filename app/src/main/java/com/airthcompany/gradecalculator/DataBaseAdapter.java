@@ -23,6 +23,8 @@ public class DataBaseAdapter {
     public static final String KEY_MAX = "max";
     public static final String KEY_WEIGHT = "weight";
 
+    public static final String TABLE_NAME_TABLE = "table"; // table name for table list
+
     public static final int COL_NAME = 1;
     public static final int COL_SCORE = 2;
     public static final int COL_MAX = 3;
@@ -76,9 +78,35 @@ public class DataBaseAdapter {
         myDatabaseHelper.close();
     }
 
+    public void createTable(String tableName){
+        String create =
+                "create table " + tableName + " (" + KEY_ROWID +
+                        " integer primary key autoincrement, "
+
+                        // MY FIELDS
+                        + KEY_NAME + " text not null, "
+                        + KEY_SCORE + " integer not null, "
+                        + KEY_MAX + " integer not null, "
+                        + KEY_WEIGHT + " integer not null"
+
+                        // To close
+                        + ");";
+
+        db.execSQL(create);
+    }
+
+
+
+    public Cursor getAllTables(){
+        Cursor c = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null);
+        return c;
+    }
+
+
+
 
     // insert item to main table (changing this later to account for multiple tables (courses) )
-    public long insertItem(String name, int score, int max, int weight){
+    public long insertItem(String name, int score, int max, int weight, String tableName){
 
         //create the data
         ContentValues initialValues = new ContentValues();
@@ -88,33 +116,34 @@ public class DataBaseAdapter {
         initialValues.put(KEY_WEIGHT, weight);
 
         //insert the data created to database
-        return db.insert(DATABASE_TABLE, null, initialValues);
+        return db.insert(tableName, null, initialValues);
     }
 
     // delete item from main table
-    public boolean deleteRow(long rowID){
+    public boolean deleteRow(long rowID, String tableName){
         // id = rowID
         String where = KEY_ROWID + "=" + rowID;
-        return db.delete(DATABASE_TABLE, where, null) != 0;
+        return db.delete(tableName, where, null) != 0;
     }
 
-    public void deleteTable(){
-        db.execSQL("DROP TABLE IF EXISTS "+DATABASE_TABLE);
+    public void deleteTable(String tableName){
+        db.execSQL("DROP TABLE IF EXISTS "+tableName);
     }
-    public void deleteAll(){
-        Cursor c = getAllRows();
+
+    public void deleteAll(String tableName){
+        Cursor c = getAllRows(tableName);
         long rowId = c.getColumnIndexOrThrow(KEY_ROWID);
         if(c.moveToFirst()){
             do{
-                deleteRow(c.getLong( (int) rowId));
+                deleteRow(c.getLong( (int) rowId), tableName);
             } while(c.moveToNext());
         }
         c.close();
     }
 
-    public Cursor getAllRows(){
+    public Cursor getAllRows(String tableName){
         String where = null;
-        Cursor c = db.query(true, DATABASE_TABLE, ALL_KEYS,
+        Cursor c = db.query(true, tableName, ALL_KEYS,
                     where, null, null, null, null, null);
         if (c != null){
             c.moveToFirst();
@@ -124,9 +153,9 @@ public class DataBaseAdapter {
     }
 
 
-    public Cursor getRow(long rowId){
+    public Cursor getRow(long rowId, String tableName){
         String where = KEY_ROWID +"="+ rowId;
-        Cursor c = db.query(true, DATABASE_TABLE, ALL_KEYS,
+        Cursor c = db.query(true, tableName, ALL_KEYS,
                 where, null, null, null, null, null);
         if (c != null){
             c.moveToFirst();
@@ -136,7 +165,7 @@ public class DataBaseAdapter {
     }
 
 
-    public boolean updateRow(long rowId, String name, int score, int max, int weight) {
+    public boolean updateRow(long rowId, String name, int score, int max, int weight, String tableName) {
         String where = KEY_ROWID + "=" + rowId;
 
 		/*
@@ -152,18 +181,8 @@ public class DataBaseAdapter {
         newValues.put(KEY_WEIGHT, weight);
 
         // Insert it into the database.
-        return db.update(DATABASE_TABLE, newValues, where, null) != 0;
+        return db.update(tableName, newValues, where, null) != 0;
     }
-
-    public void createTable(){
-        db.execSQL(DATABASE_CREATE_SQL);
-    }
-
-
-
-
-
-
 
     private static class DatabaseHelper extends SQLiteOpenHelper{
 

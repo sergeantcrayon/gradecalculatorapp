@@ -1,0 +1,39 @@
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    tools:context="com.airthcompany.gradecalculator.CoursesActivity">
+
+    <LinearLayout
+        android:id="@+id/add_course"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/button_add"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/add_course"
+            android:background="@drawable/add_class"
+            android:textColor="#5793CF"
+            android:gravity="left|center"
+            android:paddingLeft="11dp"
+
+        />
+
+
+
+
+
+
+
+
+
+        </LinearLayout>
+
+
+
+</ScrollView>
