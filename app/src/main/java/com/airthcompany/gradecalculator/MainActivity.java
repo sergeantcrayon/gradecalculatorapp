@@ -36,7 +36,7 @@ public class MainActivity extends ActionBarActivity {
 
     HashMap<String, Button> hypoButtons;
 
-    float averageGrade, targetGrade , currentTotalScore, currentTotalMax, currentTotalWeight, currentSumAndProduct, targetTotalWeight;
+    float averageGrade, targetGrade , currentTotalWeight, currentSumAndProduct, targetTotalWeight;
     float targetNeeded;
 
     @Override
@@ -44,18 +44,18 @@ public class MainActivity extends ActionBarActivity {
 
         hypoButtons = new HashMap<>(); // initializing hypothetical grade buttons
 
-        averageGrade = targetGrade = currentTotalScore = currentTotalMax = currentTotalWeight = currentSumAndProduct = targetNeeded = 0;
+        averageGrade = targetGrade  = currentTotalWeight = currentSumAndProduct = targetNeeded = 0;
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         openDB(); // opening dataBase
 
-        final LinearLayout layout = (LinearLayout) findViewById(R.id.main_layout); // retrieving main layout
+        final LinearLayout mainLayout = (LinearLayout) findViewById(R.id.main_layout); // retrieving main layout
         Button addButton = (Button) findViewById(R.id.button_add); // retrieving add button
 
         Cursor cursorAll = myDb.getAllRows(); // Displaying all items
-        DisplayAllStuff(layout, cursorAll);
+        DisplayAllStuff(mainLayout, cursorAll);
 
         addButton.setOnClickListener( new View.OnClickListener() {
             @Override
@@ -113,7 +113,7 @@ public class MainActivity extends ActionBarActivity {
 
                         //Retrieving same item from Database
                         if(cursor.moveToFirst()){
-                            DisplayAllStuff(layout, cursor);
+                            DisplayAllStuff(mainLayout, cursor);
                         }
                     }
                 });// end positive button
@@ -138,7 +138,7 @@ public class MainActivity extends ActionBarActivity {
         if(cursor.moveToFirst()){
             do{
                 final int id = cursor.getInt(DataBaseAdapter.COL_ROWID);
-                String name = cursor.getString(DataBaseAdapter.COL_NAME);
+                final String name = cursor.getString(DataBaseAdapter.COL_NAME);
                 final int score = cursor.getInt(DataBaseAdapter.COL_SCORE);
                 final int max = cursor.getInt(DataBaseAdapter.COL_MAX);
                 final int weight = cursor.getInt(DataBaseAdapter.COL_WEIGHT);
@@ -193,7 +193,6 @@ public class MainActivity extends ActionBarActivity {
                         final EditText nameInput = new EditText(v.getContext());
                         nameInput.setHint("name");
 
-
                         nameButtonAlert.setPositiveButton("Update", new DialogInterface.OnClickListener(){
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -221,7 +220,7 @@ public class MainActivity extends ActionBarActivity {
                                 }
 
                                 updateHypoButtons();
-                                computerAndDisplayAverage();
+                                displayAverage();
                             }
                         });
 
@@ -237,7 +236,7 @@ public class MainActivity extends ActionBarActivity {
 
                         // update methods
                         updateHypoButtons();
-                        computerAndDisplayAverage();
+                        displayAverage();
                     }
                 });
 
@@ -250,7 +249,7 @@ public class MainActivity extends ActionBarActivity {
                 row.addView(divider);
 
                 // Score and Max Button
-                Button scoreButton = new Button(this);
+                final Button scoreButton = new Button(this);
                 LayoutParams scoreButtonParam = new LayoutParams(0, LayoutParams.WRAP_CONTENT);
                 scoreButton.setBackgroundResource(R.drawable.button_bg);
                 scoreButtonParam.weight = 3;
@@ -261,10 +260,67 @@ public class MainActivity extends ActionBarActivity {
                     @Override
                     public void onClick(View v) {
 
+                        // Creating alert dialog box
+                        AlertDialog.Builder scoreButtonAlert = new AlertDialog.Builder(v.getContext());
+                        scoreButtonAlert.setMessage("Update Score and Max Score");
+
+                        // Creating a layout to fill with text input fields
+                        LinearLayout updateScoreLayout = new LinearLayout(v.getContext());
+                        updateScoreLayout.setOrientation(LinearLayout.VERTICAL);
+
+                        // Creating text input fields
+                        final EditText scoreInput = new EditText(v.getContext());
+                        final EditText maxInput = new EditText(v.getContext());
+                        scoreInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+                        maxInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+                        scoreInput.setHint("Score");
+                        maxInput.setHint("Max Score");
+
+                        // adding text input fields to layout
+                        updateScoreLayout.addView(scoreInput);
+                        updateScoreLayout.addView(maxInput);
+
+                        // updates the score and max score
+                        scoreButtonAlert.setPositiveButton("Update", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                // retrieve data from text fields
+                                Editable updatedScore = scoreInput.getText();
+                                Editable updatedMax = maxInput.getText();
+
+                                // updating database
+                                myDb.updateRow(id, name.toString().trim() , Integer.parseInt(updatedScore.toString()), Integer.parseInt(updatedMax.toString()), weight);
+
+                                // updating text on scoreButton
+                                scoreButton.setText( updatedScore.toString()+"/"+updatedMax.toString());
+                                scoreButton.setTextColor(Color.parseColor("#000000"));
+
+
+                                hypoButtons.remove(name.toString());
+
+
+                                // other update methods
+                                computeAverage();
+                                displayAverage();
+                                updateHypoButtons();
+                            }
+                        });
+
+                        scoreButtonAlert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // DO NOTHING
+                            }
+                        });
+
+                        scoreButtonAlert.setView(updateScoreLayout);
+                        scoreButtonAlert.show();
 
                     }
                 });
 
+                // setting text on scoreButton
                 if(score == -1){ // if there is no score and max
                     scoreButton.setTextColor(Color.parseColor("#cccccc"));
                     scoreButton.setText(String.format("%.2f", targetNeeded)+"%");
@@ -296,10 +352,13 @@ public class MainActivity extends ActionBarActivity {
             } while(cursor.moveToNext());
         }
 
-        computerAndDisplayAverage();
+        displayAverage();
 
     }
 
+    /**
+     *
+     */
     private void updateHypoButtons(){
         float targetTotal, have;
 
@@ -319,14 +378,51 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
-    private void computerAndDisplayAverage(){
+    private void computeAverage(){
+        Cursor cursor = myDb.getAllRows();
+
+        targetTotalWeight = targetTotalWeight - currentTotalWeight; // what's left should be the sum of weights from hypo buttons
+        currentTotalWeight = currentSumAndProduct = 0;
+
+        if(cursor.moveToFirst()){
+            do{
+
+                final int score = cursor.getInt(DataBaseAdapter.COL_SCORE);
+                final int max = cursor.getInt(DataBaseAdapter.COL_MAX);
+                final int weight = cursor.getInt(DataBaseAdapter.COL_WEIGHT);
+
+
+                final float grade;
+
+                if(score != NO_INPUT && max != NO_INPUT) {
+                    grade = (score / (float) max) * weight;
+                    currentTotalWeight += weight;
+                    targetTotalWeight += weight;
+                    currentSumAndProduct += grade;
+                    averageGrade = 100 * currentSumAndProduct / currentTotalWeight;
+
+                }
+            } while(cursor.moveToNext());
+        }
+    }
+    /**
+     *
+     */
+    private void displayAverage(){
+
+
         averageGrade = 100 * currentSumAndProduct / currentTotalWeight;
+
         TextView average = (TextView) findViewById(R.id.actual_average);
         String msg = String.format("%.2f", averageGrade) + "%";
         average.setText(msg);
     }
 
-
+    /**
+     *
+     *
+     * @param view
+     */
 
     public void onClick_targetAverage(View view){
         AlertDialog.Builder targetAlert = new AlertDialog.Builder(view.getContext());
