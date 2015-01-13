@@ -181,7 +181,7 @@ public class MainActivity extends ActionBarActivity {
                 nameButton.setLayoutParams(nameButtonParam);
                 nameButton.setText(name);
 
-                //onClickListener for nameButton
+                //onClick for nameButton
                 nameButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
