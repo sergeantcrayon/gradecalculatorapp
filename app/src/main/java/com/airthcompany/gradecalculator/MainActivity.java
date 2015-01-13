@@ -174,7 +174,7 @@ public class MainActivity extends ActionBarActivity {
                 row.setLayoutParams(param);
 
                 // Name Button
-                Button nameButton = new Button(this);
+                final Button nameButton = new Button(this);
                 LayoutParams nameButtonParam = new LayoutParams(0, LayoutParams.WRAP_CONTENT);
                 nameButton.setBackgroundResource(R.drawable.button_bg);
                 nameButtonParam.weight = 4;
@@ -185,16 +185,55 @@ public class MainActivity extends ActionBarActivity {
                 nameButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        myDb.deleteRow(id);
-                        layout.removeView(row);
+
+                        AlertDialog.Builder nameButtonAlert = new AlertDialog.Builder(v.getContext());
+
+                        nameButtonAlert.setMessage("Update or Delete item");
+
+                        final EditText nameInput = new EditText(v.getContext());
+                        nameInput.setHint("name");
 
 
-                        if(score != NO_INPUT && max != NO_INPUT) { // real Button case
-                            currentSumAndProduct -= grade;
-                            currentTotalWeight -= weight;
-                        } else { // hypothetical button case
-                            targetTotalWeight -= weight;
-                        }
+                        nameButtonAlert.setPositiveButton("Update", new DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Editable updatedName = nameInput.getText();
+
+                                myDb.updateRow(id, updatedName.toString().trim(), score, max, weight);
+                                nameButton.setText(updatedName);
+                            }
+                        });
+
+                        // DELETE ITEM ONCLICK
+                        nameButtonAlert.setNeutralButton("Delete", new DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                myDb.deleteRow(id);
+                                layout.removeView(row);
+
+
+                                if(score != NO_INPUT && max != NO_INPUT) { // real Button case
+                                    currentSumAndProduct -= grade;
+                                    currentTotalWeight -= weight;
+                                } else { // hypothetical button case
+                                    targetTotalWeight -= weight;
+                                }
+
+                                updateHypoButtons();
+                                computerAndDisplayAverage();
+                            }
+                        });
+
+                        nameButtonAlert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // DO NOTHING
+                            }
+                        });
+
+                        nameButtonAlert.setView(nameInput);
+                        nameButtonAlert.show();
 
                         // update methods
                         updateHypoButtons();
@@ -221,6 +260,7 @@ public class MainActivity extends ActionBarActivity {
                 scoreButton.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View v) {
+
 
                     }
                 });
